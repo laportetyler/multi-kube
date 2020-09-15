@@ -1,0 +1,22 @@
+language: generic
+sudo: required
+services:
+    - docker
+before install:
+    - docker build -t laportetyler/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+    - docker run -e CI=true laportetyler/react-test npm test
+
+after_sucess:
+    - docker build -t laportetyler/multi-client ./client
+    - docker build -t laportetyler/multi-nginx ./nginx
+    - docker build -t laportetyler/multi-server ./server
+    - docker build -t laportetyler/multi-worker ./worker
+    # Log in to the docker CLI
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+    # Take those images and push to docker hub
+    - docker push laportetyler/multi-client
+    - docker push laportetyler/multi-nginx
+    - docker push laportetyler/multi-server
+    - docker push laportetyler/multi-worker
